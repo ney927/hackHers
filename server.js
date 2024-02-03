@@ -1,19 +1,14 @@
-var path = require('path');
-var express = require('express');
-
 const SerialPort = require('serialport').SerialPort;
 const { ReadlineParser } = require('@serialport/parser-readline')
 
 const PORT = process.env.PORT || 3000
-var app = express(); //create express middleware dispatcher
-var queryTables = 'A';
 
-//middleware
-app.use(express.static(__dirname + '/public')) //provide static server
+const server = require('http').createServer(handler)
+const io = require('socket.io')(server) //wrap server app in socket io capability
+const fs = require('fs') //file system to server static files
+const url = require('url'); //to parse url strings
+server.listen(PORT) //start http server listening on PORT
 
-app.get("/",  function (req, res){
-    res.sendFile(path.join(process.cwd() + '/public/home.html'));
-})
 
 const port = new SerialPort({
     path: 'COM4',
@@ -27,20 +22,40 @@ port.on('error', function(err) {
 })
 
 // Switches the port into "flowing mode"
-parser.on('data', function (data) {
-    // console.log('Parser Data:', data)
-})
+
+io.on('connection', function(socket) {
+    console.log('connected');
+    parser.on('data', function (data) {
+        // console.log('Parser Data:', data)
+        io.emit('getData', data)
+    })
+    socket.on('disconnect', function(data) {
+        //event emitted when a client disconnects
+        console.log('client disconnected')
+    })
+});
 
 
-//handle non-existing requests
-app.use((req,res)=>{
-    res.status(404).send('404: Page Not Found')
-})
 
-//start server
-app.listen(PORT, err => {
-    if(err) console.log(err)
-    else {console.log(`Server listening on port: ${PORT}`)}
-})
+function handler(req, res) {
+    //handler for http server requests including static files
+    let urlObj = url.parse(req.url, true, false)
+    let filePath = 'public/'+ urlObj.pathname
+    // let filePath = 'public/home.html'
+    fs.readFile(filePath, function(err, data) {
+        if (err) {
+          //report error to console
+          console.log('ERROR: ' + JSON.stringify(err))
+          //respond with not found 404 to client
+          res.writeHead(404);
+          res.end(JSON.stringify(err))
+          return
+        }
+        res.writeHead(200, {
+          'Content-Type': 'text/html'
+        })
+        res.end(data)
+      })
+  }
 
 
