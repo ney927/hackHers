@@ -1,38 +1,46 @@
+var path = require('path');
+var express = require('express');
+
 const SerialPort = require('serialport').SerialPort;
-// const Readline = require('@serialport/parser-readline');
+const { ReadlineParser } = require('@serialport/parser-readline')
+
+const PORT = process.env.PORT || 3000
+var app = express(); //create express middleware dispatcher
+var queryTables = 'A';
+
+//middleware
+app.use(express.static(__dirname + '/public')) //provide static server
+
+app.get("/",  function (req, res){
+    res.sendFile(path.join(process.cwd() + '/public/home.html'));
+})
 
 const port = new SerialPort({
-    path: 'COM3',
+    path: 'COM4',
     baudRate: 57600,
 })
+const parser = port.pipe(new ReadlineParser());
 
 // Open errors will be emitted as an error event
 port.on('error', function(err) {
     console.log('Error: ', err.message)
 })
 
-  
-// Read data that is available but keep the stream in "paused mode"
-port.on('readable', function () {
-    console.log('Data:', port.read())
-})
-
 // Switches the port into "flowing mode"
-port.on('data', function (data) {
-    console.log('Data:', data)
+parser.on('data', function (data) {
+    // console.log('Parser Data:', data)
 })
 
-// Pipe the data into another stream (like a parser or standard out)
-// const lineStream = port.pipe(new Readline())
 
+//handle non-existing requests
+app.use((req,res)=>{
+    res.status(404).send('404: Page Not Found')
+})
 
+//start server
+app.listen(PORT, err => {
+    if(err) console.log(err)
+    else {console.log(`Server listening on port: ${PORT}`)}
+})
 
-
-
-// const parser = port.pipe(new Readline({ delimiter: '\r\n' }));
-
-// parser.on('data', (data) => {
-//   console.log(`Pico Data: ${data}`);
-//   // Process the Raspberry Pi Pico data as needed in your Node.js application
-// });
 
