@@ -7,8 +7,14 @@
 </head>
 <style>
     body{
-        background-color: black;
+        background-color: black;  
     }
+    .container {
+			display: flex;
+			justify-content: center;
+			align-items: center;
+			height: 100vh;
+		}
     a{
         background-color: black;
         border: solid 5px rgb(213, 124, 208);
@@ -17,9 +23,14 @@
         font-size: 50px;
         font-family: 'Arial Narrow ', sans-serif;
         text-decoration: none;
+        padding: 10px 20px;
+			border-radius: 5px;
+			cursor: pointer;
     }
 </style>
 <body>
-    <a href="/home.html">POWER ON</a>
+    <div class="container">
+    <a href="/home.html">INITIALIZE</a>
+</div>
 </body>
 </html>
