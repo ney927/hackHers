@@ -11,7 +11,7 @@ server.listen(PORT) //start http server listening on PORT
 
 
 const port = new SerialPort({
-    path: 'COM4',
+    path: 'COM3',
     baudRate: 57600,
 })
 const parser = port.pipe(new ReadlineParser());
